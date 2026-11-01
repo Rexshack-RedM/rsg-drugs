@@ -1,6 +1,5 @@
 -- Drug reputation (XP). Shared by server.lua (lab) and addiction.lua (NPC sales) via the DrugsXP global.
 local RSGCore = exports['rsg-core']:GetCoreObject()
-lib.locale()
 
 DrugsXP = {}
 
@@ -34,7 +33,7 @@ local function getXP(Player)
     local xp = tonumber(Player.Functions.GetRep(Config.XP.RepName)) or 0
     if xp > 0 and Config.XP.ResetOnJail and inJail(Player) then
         wipe(Player)
-        TriggerClientEvent('ox_lib:notify', Player.PlayerData.source, { title = locale('xp_title'), description = locale('xp_jail_reset'), type = 'error', duration = 8000 })
+        TriggerClientEvent('RSGCore:Client:Notify', Player.PlayerData.source, { title = locale('xp_title'), description = locale('xp_jail_reset'), type = 'error', duration = 8000 })
         return 0
     end
     return xp
@@ -63,11 +62,11 @@ function DrugsXP.Add(src, amount, reason)
         local key = reason and ('xp_reason_' .. reason)
         local why = key and locale(key) or ''
         if why == key then why = '' end -- unknown reason from another resource
-        TriggerClientEvent('ox_lib:notify', src, { title = locale('xp_title'), description = locale('xp_gain', amount, why), type = 'inform', duration = 3000 })
+        TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('xp_title'), description = locale('xp_gain', amount, why), type = 'inform', duration = 3000 })
     end
     local lb, la = levelFor(before), levelFor(after)
     if la > lb then
-        TriggerClientEvent('ox_lib:notify', src, { title = locale('xp_title'), description = locale('xp_level', la, Config.XP.Levels[la].label), type = 'success', duration = 7000 })
+        TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('xp_title'), description = locale('xp_level', la, Config.XP.Levels[la].label), type = 'success', duration = 7000 })
         DrugsLog('xp', 'Level up', src, { { 'Level', ('%d - %s'):format(la, Config.XP.Levels[la].label) }, { 'Total XP', after }, { 'Source', reason or '-' } })
     end
     return true

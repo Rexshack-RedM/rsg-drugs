@@ -1,5 +1,5 @@
 if not Config.Export.Enabled then return end
-lib.locale()
+local RSGCore = exports['rsg-core']:GetCoreObject()
 
 local E = Config.Export
 local open = false
@@ -20,15 +20,15 @@ end
 
 AddEventHandler('rsg-drugs:client:exportOpen', function()
     if open then return end
-    local data = lib.callback.await('rsg-drugs:server:exportOpen', false)
+    local data = RSGCore.Functions.AwaitCallback('rsg-drugs:server:exportOpen', 10000)
     if not data then return end
     open = true
     SetNuiFocus(true, true)
-    SendNUIMessage({ action = 'export:open', data = data, locale = lib.getLocales() })
+    SendNUIMessage({ action = 'export:open', data = data, locale = locale() })
 end)
 
 RegisterNUICallback('exportSell', function(body, cb)
-    local res = lib.callback.await('rsg-drugs:server:exportSell', false, body and body.amount)
+    local res = RSGCore.Functions.AwaitCallback('rsg-drugs:server:exportSell', 10000, body and body.amount)
     cb(res or false)
     -- deal done: close the panel and hand the bricks over
     if res and res.sold then

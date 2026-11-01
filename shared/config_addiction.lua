@@ -1,11 +1,9 @@
 Config = Config or {}
-lib.locale() -- labels come from locales/*.json (cfg_* keys)
 Config.Addiction = {}
 
 ---------------------------------------------------------------------
 -- General
 ---------------------------------------------------------------------
-Config.Addiction.Debug        = false
 Config.Addiction.TickInterval = 60    -- seconds between server addiction ticks (craving growth / natural decay)
 Config.Addiction.UseCooldown  = 5     -- seconds, per player anti-spam on reported uses
 
@@ -105,7 +103,7 @@ Config.Addiction.Rehab = {
         -- items the patient keeps (money items: keep these so cash isn't touched)
         KeepItems = { dollar = true, cent = true, blood_dollar = true, blood_cent = true },
     },
-    -- Voluntary check-in NPC (ox_target)
+    -- Voluntary check-in NPC (rsg-target)
     CheckIn = {
         coords   = vector4(3333.70, -630.64, 43.64, 29.82),
         model    = `u_m_m_valdoctor_01`, -- rdr3_discoveries peds/peds_list.lua
@@ -136,7 +134,7 @@ Config.Addiction.NPC = {
 }
 
 ---------------------------------------------------------------------
--- Selling weed bags to NPCs (ox_target)
+-- Selling weed bags to NPCs (rsg-target)
 ---------------------------------------------------------------------
 Config.Addiction.Selling = {
     Item        = 'weed_bag',

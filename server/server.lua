@@ -1,5 +1,9 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-lib.locale()
+
+-- rsg-core callback wrapper: handlers return their result(s) instead of calling cb
+local function Callback(name, fn)
+    RSGCore.Functions.CreateCallback(name, function(src, cb, ...) cb(fn(src, ...)) end)
+end
 
 local Labs = {}        -- [citizenid] = lab data
 local Dirty = {}       -- [citizenid] = true when needs saving
@@ -13,7 +17,7 @@ local Viewing = {}     -- [src] = true while the lab UI is open (only those get 
 local function round(n) return math.floor(n * 100 + 0.5) / 100 end
 
 local function notify(src, desc, ntype)
-    TriggerClientEvent('ox_lib:notify', src, { title = locale('title'), description = desc, type = ntype or 'inform' })
+    TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('title'), description = desc, type = ntype or 'inform' })
 end
 
 local function newLab()
@@ -129,7 +133,7 @@ end
 ---------------------------------
 -- callbacks
 ---------------------------------
-lib.callback.register('rsg-drugs:server:getLab', function(src)
+Callback('rsg-drugs:server:getLab', function(src)
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player or not nearLab(src) then return end
     local cid = Player.PlayerData.citizenid
@@ -148,7 +152,7 @@ end)
 
 RegisterNetEvent('rsg-drugs:server:closed', function() Viewing[source] = nil end)
 
-lib.callback.register('rsg-drugs:server:action', function(src, action, data)
+Callback('rsg-drugs:server:action', function(src, action, data)
     local Player, cid, lab = validate(src)
     if not Player then return end
     data = type(data) == 'table' and data or {}
@@ -260,7 +264,7 @@ lib.callback.register('rsg-drugs:server:action', function(src, action, data)
 end)
 
 -- player's pantry options (items they actually hold)
-lib.callback.register('rsg-drugs:server:getSupplies', function(src)
+Callback('rsg-drugs:server:getSupplies', function(src)
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return end
     local out = { raw = countItem(src, Config.Items.raw), food = {}, water = {} }

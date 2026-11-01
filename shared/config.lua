@@ -1,5 +1,4 @@
 Config = {}
-lib.locale() -- player-facing labels below come from locales/*.json (cfg_* keys); plain strings work too
 
 ---------------------------------
 -- processing npc

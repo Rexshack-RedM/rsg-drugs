@@ -1,5 +1,9 @@
 local RSGCore = exports['rsg-core']:GetCoreObject()
-lib.locale()
+
+-- rsg-core callback wrapper: handlers return their result(s) instead of calling cb
+local function Callback(name, fn)
+    RSGCore.Functions.CreateCallback(name, function(src, cb, ...) cb(fn(src, ...)) end)
+end
 
 local lastUse = {}   -- [src] = os.time()
 local hookedItem = {} -- [itemName] = substance key (items consumed by rsg-consume)
@@ -33,7 +37,7 @@ local function saveData(P, d)
 end
 
 local function notify(src, desc, ntype)
-    TriggerClientEvent('ox_lib:notify', src, { title = locale('addiction_title'), description = desc, type = ntype or 'inform', duration = 5000 })
+    TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('addiction_title'), description = desc, type = ntype or 'inform', duration = 5000 })
 end
 
 local function clamp(v) return math.max(0, math.min(100, v)) end
@@ -295,7 +299,7 @@ end)
 
 -- Selling weed bags to NPCs (netId = 0 when the ped isn't networked)
 local lastSell = {}
-lib.callback.register('rsg-drugs:server:sellWeedBag', function(src, netId)
+Callback('rsg-drugs:server:sellWeedBag', function(src, netId)
     local S = Config.Addiction.Selling
     local Player = RSGCore.Functions.GetPlayer(src)
     if not Player then return false end
@@ -545,6 +549,7 @@ RSGCore.Commands.Add('clearaddiction', locale('cmd_clear'), {
     local Target = RSGCore.Functions.GetPlayer(tonumber(args[1]) or -1)
     if not Target then return notify(source, locale('invalid_target'), 'error') end
     local wasInRehab = getData(Target).rehab > 0
+    RehabLeft[Target.PlayerData.source], RehabSaved[Target.PlayerData.source] = nil, nil
     saveData(Target, defaultData())
     if wasInRehab then
         TriggerClientEvent('rsg-drugs:client:teleport', Target.PlayerData.source, Config.Addiction.Rehab.Release)

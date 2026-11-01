@@ -1,7 +1,11 @@
 -- Brick export market. State persists in resource KVP (no SQL).
 if not Config.Export.Enabled then return end
 local RSGCore = exports['rsg-core']:GetCoreObject()
-lib.locale()
+
+-- rsg-core callback wrapper: handlers return their result(s) instead of calling cb
+local function Callback(name, fn)
+    RSGCore.Functions.CreateCallback(name, function(src, cb, ...) cb(fn(src, ...)) end)
+end
 
 local E = Config.Export
 local KVP = 'rsg-drugs:market'
@@ -35,7 +39,7 @@ end
 if #Market.history == 0 then pushHistory() end
 
 local function notify(src, desc, ntype)
-    TriggerClientEvent('ox_lib:notify', src, { title = locale('export_title'), description = desc, type = ntype or 'inform' })
+    TriggerClientEvent('RSGCore:Client:Notify', src, { title = locale('export_title'), description = desc, type = ntype or 'inform' })
 end
 
 local function canTrade(src)
@@ -65,12 +69,12 @@ local function payload(src)
     }
 end
 
-lib.callback.register('rsg-drugs:server:exportOpen', function(src)
+Callback('rsg-drugs:server:exportOpen', function(src)
     if not canTrade(src) then return end
     return payload(src)
 end)
 
-lib.callback.register('rsg-drugs:server:exportSell', function(src, amount)
+Callback('rsg-drugs:server:exportSell', function(src, amount)
     local Player = canTrade(src)
     if not Player then return end
     amount = math.floor(tonumber(amount) or 0)

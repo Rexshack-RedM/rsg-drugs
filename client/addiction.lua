@@ -1,4 +1,4 @@
-lib.locale()
+local RSGCore = exports['rsg-core']:GetCoreObject()
 
 local currentStage = 0
 local activeFx = nil
@@ -60,7 +60,7 @@ local function applyStage(stage, key)
     setFx(s.fx)
     if stage > prev then
         local label = key and Config.Addiction.Substances[key].label or ''
-        lib.notify({ title = locale('addiction_title'), description = locale('stage_' .. stage, label), type = stage >= 3 and 'error' or 'warning', duration = 6000 })
+        RSGCore.Functions.Notify({ title = locale('addiction_title'), description = locale('stage_' .. stage, label), type = stage >= 3 and 'error' or 'warning', duration = 6000 })
     end
 end
 
@@ -102,7 +102,7 @@ CreateThread(function()
             Wait(2000)
         else
             local s = Config.Addiction.Stages[currentStage]
-            local ped = cache.ped
+            local ped = PlayerPedId()
 
             -- stamina cap (core index 1 = ATTRIBUTE_CORE_STAMINA, natives/db/ATTRIBUTE.md)
             if s.staminaCap < 100 and Citizen.InvokeNative(0x36731AC041289BB1, ped, 1) > s.staminaCap then
@@ -135,16 +135,16 @@ RegisterNetEvent('rsg-drugs:client:useSubstance', function(key)
     local cfg = Config.Addiction.Substances[key]
     if not cfg or busy then return end
     busy = true
-    local ped = cache.ped
+    local ped = PlayerPedId()
     if cfg.useScenario and not IsPedOnMount(ped) and not IsPedInAnyVehicle(ped, false) then
         TaskStartScenarioInPlaceHash(ped, joaat(cfg.useScenario), cfg.useTime or 8000, true, 0, -1.0, false)
         Wait(cfg.useTime or 8000)
         ClearPedTasks(ped)
     end
     local b = cfg.boost
-    lib.notify({ title = locale('addiction_title'), description = b and locale('boost') or locale('used', cfg.label), type = b and 'success' or 'inform', duration = 6000 })
+    RSGCore.Functions.Notify({ title = locale('addiction_title'), description = b and locale('boost') or locale('used', cfg.label), type = b and 'success' or 'inform', duration = 6000 })
     if b then
-        ped = cache.ped
+        ped = PlayerPedId()
         for core, value in pairs(b.fillCores or {}) do
             Citizen.InvokeNative(0xC6258F41D86676E0, ped, core, value) -- _SET_ATTRIBUTE_CORE_VALUE
         end
@@ -173,7 +173,7 @@ end)
 -- Rehab teleport + local fence
 ---------------------------------------------------------------------
 RegisterNetEvent('rsg-drugs:client:teleport', function(pos)
-    local ped = cache.ped
+    local ped = PlayerPedId()
     DoScreenFadeOut(500)
     local t = GetGameTimer() + 3000
     while not IsScreenFadedOut() and GetGameTimer() < t do Wait(10) end
@@ -194,7 +194,7 @@ RegisterNetEvent('rsg-drugs:client:disarm', function()
             if v.name then TriggerEvent('rsg-weapons:client:UseWeapon', { name = v.name }) end -- name only = unequip
         end
     end
-    SetCurrentPedWeapon(cache.ped, `WEAPON_UNARMED`, true, 0, false, false)
+    SetCurrentPedWeapon(PlayerPedId(), `WEAPON_UNARMED`, true, 0, false, false)
 end)
 
 RegisterNetEvent('rsg-drugs:client:reequip', function(list)
@@ -206,7 +206,7 @@ RegisterNetEvent('rsg-drugs:client:reequip', function(list)
             Wait(500)
         end
         Wait(500)
-        Citizen.InvokeNative(0x94A3C1B804D291EC, cache.ped, false, false, false, true) -- holster (same as rsg-weapons restore)
+        Citizen.InvokeNative(0x94A3C1B804D291EC, PlayerPedId(), false, false, false, true) -- holster (same as rsg-weapons restore)
     end)
 end)
 

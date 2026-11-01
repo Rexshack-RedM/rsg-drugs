@@ -14,7 +14,7 @@ const itemIcon = (item, letter) => item
 const itemName = (k) => state.config.items ? state.config.items[k] : null;
 const packing = () => state.config.packing;
 const money = (n) => '$' + Number(n).toFixed(2);
-// locales come from locales/*.json via lib.getLocales(); %s placeholders filled in order, %% = literal %
+// locales come from locales/*.json via rsg-core locale(); %s placeholders filled in order, %% = literal %
 let LOCALE = {};
 const t = (key, ...args) => { let i = 0; return String(LOCALE[key] ?? key).replace(/%%|%s/g, (m) => m === '%%' ? '%' : String(args[i++] ?? '')); };
 const applyStatic = () => document.querySelectorAll('[data-l]').forEach((el) => { el.textContent = t(el.dataset.l); });
@@ -227,6 +227,7 @@ $('#close').addEventListener('click', () => post('close'));
 document.addEventListener('keyup', (e) => { if (e.key === 'Escape' && !$('#app').classList.contains('hidden')) post('close'); });
 
 window.addEventListener('message', ({ data }) => {
+  if (!data) return;
   if (data.action === 'open') { if (data.locale) { LOCALE = data.locale; applyStatic(); } state = data.data; syncTick(state); $('#app').classList.remove('hidden'); setTab('operation'); render(); }
   else if (data.action === 'update' && state) { const sup = state.supplies; state = data.data; state.supplies = sup; syncTick(state); render(true); }
   else if (data.action === 'close') { $('#app').classList.add('hidden'); clearInterval(tickTimer); tickTimer = null; }

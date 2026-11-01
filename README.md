@@ -2,13 +2,16 @@
 
 Drug production for RSG Framework (cannabis lab: drying, processing, packing bags & bricks with hired crew) plus a built-in player & NPC addiction system with rehab.
 
+## Requirements
+`rsg-core` (3.0.3+), `rsg-inventory`, `rsg-target`, `oxmysql`. Optional: `rsg-consume` (alcohol), `rsg-hud` (stress relief), `rsg-weapons` (re-equip after rehab), `rsg-farming` (weed seeds). No ox_lib needed.
+
 ## Install
-1. `ensure rsg-drugs`
+1. `ensure rsg-drugs` (after rsg-core, rsg-inventory and rsg-target)
 2. Run `installation/install.sql` and add `installation/shared_items.lua` to `rsg-core/shared/items.lua`.
 3. Lab settings: `shared/config.lua` · Addiction settings: `shared/config_addiction.lua` (`Config.Addiction`).
 
 ## Brick export (demand market)
-Players at **Distributor or higher** (`Config.Export.MinLevel`) can sell `weed_brick` to a buyer NPC (`Config.Export.NPC`, ox_target *Talk business*). Settings: `shared/config_export.lua`.
+Players at **Distributor or higher** (`Config.Export.MinLevel`) can sell `weed_brick` to a buyer NPC (`Config.Export.NPC`, rsg-target *Talk business*). Settings: `shared/config_export.lua`.
 - **Price follows supply**: an empty market pays `MaxPrice` (default $3,000); as the buyer's stock approaches `Saturation` (40 bricks) the price slides towards `MinPrice` ($800). Every brick sold raises his stock, so a big dump earns less per brick (each brick in a deal is priced in turn).
 - **Recovers over time**: every `TickMinutes` the buyer offloads around `DrainPerHour` bricks/hour (±30%) and demand drifts randomly between `DemandMin`–`DemandMax`, so prices rise and fall realistically.
 - The market is shared by all players and saved in resource KVP (survives restarts, no SQL).
@@ -39,9 +42,9 @@ exports['rsg-drugs']:ResetXP(src)               -- wipe to 0, returns XP removed
 ## Languages
 Every player-facing string (notifications, targets, commands, NUI panels, HUD and the config labels for skills, roles, packing, XP levels, substances and withdrawal stages) is in `locales/*.json`.
 
-Included: `en`, `de`, `el`, `es`, `fr`, `ja`, `nl`, `pl`, `pt-br`, `ro`. Pick one with the ox_lib convar in `server.cfg`:
+Included: `en`, `de`, `el`, `es`, `fr`, `ja`, `nl`, `pl`, `pt-br`, `ro`. Locales are loaded by rsg-core. Pick one in `server.cfg` (falls back to `ox:locale`, then `en`):
 ```
-setr ox:locale de
+setr rsg:locale de
 ```
 Config labels use `cfg_*` keys (e.g. `label = locale('cfg_skill_1')`). You can still put a plain string there if you only run one language. Discord logs stay in English (admin-only).
 
@@ -83,10 +86,10 @@ Player & NPC addiction system for RSG Framework (alcohol and weed). Keep feeding
 - Not hooked? Dependency slowly decays on its own.
 - **Rehab** wipes all addictions after the timer is served (online time only). Players are teleported into Sisika and fenced in; on completion they're released at the gate.
 - Lawmen (job type `leo`), medics (`medic`) or admins: `/rehab [id] [minutes]` (target within 5m unless admin).
-- Voluntary: talk to the rehab doctor NPC at the Sisika gate (ox_target *Check in to rehab*). Only offered while you are not already in rehab.
+- Voluntary: talk to the rehab doctor NPC at the Sisika gate (rsg-target *Check in to rehab*). Only offered while you are not already in rehab.
 - Withdrawal is held at stage 1 during rehab and substances can't be used.
-- **Inspect NPCs** (lawmen/medics on duty): ox_target *Look them over* on an ambient NPC shows whether they're hooked. *Send to rehab* clears an NPC addict.
-- **Rehab bonus**: lawmen/medics are paid `Config.Addiction.Rehab.Reward.Amount` (default $1) per admission, for players via `/rehab` and for NPCs via ox_target (NPC rewards have a per-officer cooldown, and no bonus for NPCs you sold to yourself). Only real addicts can be admitted by job holders, and no one already in rehab.
+- **Inspect NPCs** (lawmen/medics on duty): rsg-target *Look them over* on an ambient NPC shows whether they're hooked. *Send to rehab* clears an NPC addict.
+- **Rehab bonus**: lawmen/medics are paid `Config.Addiction.Rehab.Reward.Amount` (default $1) per admission, for players via `/rehab` and for NPCs via rsg-target (NPC rewards have a per-officer cooldown, and no bonus for NPCs you sold to yourself). Only real addicts can be admitted by job holders, and no one already in rehab.
 
 ### Selling weed bags to NPCs
 - Players carrying a `weed_bag` get *Sell Bag of Weed* on ambient NPCs (shop/script NPCs and riders are excluded).

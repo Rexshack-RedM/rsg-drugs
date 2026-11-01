@@ -1,4 +1,4 @@
-lib.locale()
+local RSGCore = exports['rsg-core']:GetCoreObject()
 
 local uiOpen = false
 
@@ -24,12 +24,12 @@ end
 
 AddEventHandler('rsg-drugs:client:open', function()
     if uiOpen then return end
-    local data = lib.callback.await('rsg-drugs:server:getLab', false)
+    local data = RSGCore.Functions.AwaitCallback('rsg-drugs:server:getLab', 10000)
     if not data then return end
-    data.supplies = lib.callback.await('rsg-drugs:server:getSupplies', false)
+    data.supplies = RSGCore.Functions.AwaitCallback('rsg-drugs:server:getSupplies', 10000)
     uiOpen = true
     SetNuiFocus(true, true)
-    SendNUIMessage({ action = 'open', data = data, locale = lib.getLocales() })
+    SendNUIMessage({ action = 'open', data = data, locale = locale() })
 end)
 
 RegisterNetEvent('rsg-drugs:client:refresh', function(data)
@@ -40,8 +40,8 @@ end)
 RegisterNUICallback('close', function(_, cb) closeUI() cb('ok') end)
 
 RegisterNUICallback('action', function(body, cb)
-    local data = lib.callback.await('rsg-drugs:server:action', false, body.action, body.data)
-    if data then data.supplies = lib.callback.await('rsg-drugs:server:getSupplies', false) end
+    local data = RSGCore.Functions.AwaitCallback('rsg-drugs:server:action', 10000, body.action, body.data)
+    if data then data.supplies = RSGCore.Functions.AwaitCallback('rsg-drugs:server:getSupplies', 10000) end
     cb(data or false)
 end)
 

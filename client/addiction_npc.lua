@@ -2,7 +2,6 @@
 -- Ambient peds become weed addicts when a player sells them a weed_bag; their craving grows
 -- over time and they stagger, brace against walls in withdrawal, and periodically feed their habit.
 if not Config.Addiction.NPC.Enabled then return end
-lib.locale()
 
 local RSGCore = exports['rsg-core']:GetCoreObject()
 local addicts = {}   -- [ped] = { key = 'weed', craving = 0-100, busyUntil = ms }
@@ -68,7 +67,7 @@ AddEventHandler('rsg-drugs:client:npcSoldWeedBag', function(ped) soldWeedBag(ped
 CreateThread(function()
     while true do
         Wait(Config.Addiction.NPC.ScanInterval)
-        local myPos = GetEntityCoords(cache.ped)
+        local myPos = GetEntityCoords(PlayerPedId())
         local now = GetGameTimer()
 
         -- forget invalid / far peds
@@ -113,7 +112,7 @@ CreateThread(function()
 end)
 
 ---------------------------------------------------------------------
--- ox_target: inspect / send to rehab (lawmen & medics)
+-- rsg-target: inspect / send to rehab (lawmen & medics)
 ---------------------------------------------------------------------
 -- keep a live copy of the job (rsg-multijob switches/removals fire OnJobUpdate)
 local myJob = RSGCore.Functions.GetPlayerData().job
@@ -130,7 +129,7 @@ local function canAdmit()
     return (Config.Addiction.Rehab.AllowedJobTypes[job.type] or Config.Addiction.Rehab.AllowedJobs[job.name]) and true or false
 end
 
-exports.ox_target:addGlobalPed({
+exports['rsg-target']:addGlobalPed({
     {
         name = 'rsg_addiction_npc_inspect',
         icon = 'fa-solid fa-eye',
@@ -140,9 +139,9 @@ exports.ox_target:addGlobalPed({
         onSelect = function(data)
             local key = addicts[data.entity] and addicts[data.entity].key or Entity(data.entity).state.rsgAddict
             if key and Config.Addiction.Substances[key] then
-                lib.notify({ title = locale('addiction_title'), description = locale('npc_addict', Config.Addiction.Substances[key].label), type = 'warning' })
+                RSGCore.Functions.Notify({ title = locale('addiction_title'), description = locale('npc_addict', Config.Addiction.Substances[key].label), type = 'warning' })
             else
-                lib.notify({ title = locale('addiction_title'), description = locale('npc_clean'), type = 'inform' })
+                RSGCore.Functions.Notify({ title = locale('addiction_title'), description = locale('npc_clean'), type = 'inform' })
             end
         end,
     },
@@ -158,13 +157,13 @@ exports.ox_target:addGlobalPed({
             release(ped)
             ClearPedTasks(ped)
             TaskWanderStandard(ped, 1.0, 0)
-            lib.notify({ title = locale('addiction_title'), description = locale('npc_sent'), type = 'success' })
+            RSGCore.Functions.Notify({ title = locale('addiction_title'), description = locale('npc_sent'), type = 'success' })
         end,
     },
 })
 
 ---------------------------------------------------------------------
--- ox_target: sell weed bag
+-- rsg-target: sell weed bag
 ---------------------------------------------------------------------
 local alertBlips = {}
 
@@ -181,7 +180,7 @@ end
 
 local selling = false
 
-exports.ox_target:addGlobalPed({
+exports['rsg-target']:addGlobalPed({
     {
         name = 'rsg_addiction_npc_sell',
         icon = 'fa-solid fa-cannabis',
@@ -193,7 +192,7 @@ exports.ox_target:addGlobalPed({
         onSelect = function(data)
             local ped = data.entity
             selling = true
-            local result, hooked = lib.callback.await('rsg-drugs:server:sellWeedBag', false, netIdOf(ped))
+            local result, hooked = RSGCore.Functions.AwaitCallback('rsg-drugs:server:sellWeedBag', 10000, netIdOf(ped))
             -- one sale per NPC; addicts come back for more (server enforces the rebuy cooldown)
             if result == 'done' or (result == 'sold' and not hooked) then tried[ped] = true end
             if result == 'sold' then
@@ -207,7 +206,7 @@ exports.ox_target:addGlobalPed({
             elseif result == 'refused' then
                 tried[ped] = true
                 ClearPedTasks(ped)
-                TaskSmartFleePed(ped, cache.ped, 50.0, 10000, 0, 0, 0)
+                TaskSmartFleePed(ped, PlayerPedId(), 50.0, 10000, 0, 0, 0)
             end
             sellItemAt = 0 -- re-check stock after a sale
             selling = false
@@ -221,7 +220,7 @@ RegisterNetEvent('rsg-drugs:client:sellAlert', function(coords)
     Citizen.InvokeNative(0x662D364ABF16DE2F, blip, joaat('BLIP_MODIFIER_AREA_PULSE'))  -- BlipAddModifier
     Citizen.InvokeNative(0x9CB1A1623062F402, blip, locale('sell_hotspot'))            -- SetBlipName
     alertBlips[blip] = true
-    lib.notify({ title = locale('sell_alert_title'), description = locale('sell_alert'), type = 'warning', duration = 8000 })
+    RSGCore.Functions.Notify({ title = locale('sell_alert_title'), description = locale('sell_alert'), type = 'warning', duration = 8000 })
     SetTimeout(S.AlertDuration * 1000, function()
         if DoesBlipExist(blip) then RemoveBlip(blip) end
         alertBlips[blip] = nil
@@ -232,5 +231,5 @@ AddEventHandler('onResourceStop', function(res)
     if res ~= GetCurrentResourceName() then return end
     for ped in pairs(addicts) do release(ped) end
     for b in pairs(alertBlips) do if DoesBlipExist(b) then RemoveBlip(b) end end
-    exports.ox_target:removeGlobalPed({ 'rsg_addiction_npc_inspect', 'rsg_addiction_npc_rehab', 'rsg_addiction_npc_sell' })
+    exports['rsg-target']:removeGlobalPed({ 'rsg_addiction_npc_inspect', 'rsg_addiction_npc_rehab', 'rsg_addiction_npc_sell' })
 end)

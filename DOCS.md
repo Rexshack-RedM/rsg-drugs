@@ -129,4 +129,4 @@ All XP, payouts and prices come from config on the server; clients can't send am
 | Items missing | Add `installation/shared_items.lua` to your items |
 | Rehab bonus not paid | Job must be in `AllowedJobTypes`/`AllowedJobs`; NPC rewards have a cooldown |
 
-Support: https://buymeacoffee.com/rexshack
+Support the Project : https://rexshack.tebex.store/
